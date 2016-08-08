@@ -95,17 +95,18 @@ func Check() {
 // Run every 5mins and remember state
 // for Zenoss
 func loop() {
+	Check()
 	for {
-		Check()
+		if config.Verbose {
+			fmt.Println("worker sleep 5min")
+		}
+
 		select {
 		case <-time.After(5 * time.Minute):
 			if config.Verbose {
 				fmt.Println("5min passed")
 			}
 			Check()
-			if config.Verbose {
-				fmt.Println("Done, sleeping another 5min")
-			}
 		}
 	}
 }
