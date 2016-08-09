@@ -18,9 +18,14 @@ type State struct {
 }
 
 func (s State) String() string {
-	msg := s.Stderr
-	if len(s.Stdout) > 0 {
-		msg += s.Stdout
+	var msg string
+	if s.Err != nil {
+		msg = s.Err.Error()
+	} else {
+		msg = s.Stderr
+		if len(s.Stdout) > 0 {
+			msg += s.Stdout
+		}
 	}
 	return strings.Replace(msg, "\n", "", -1)
 }
@@ -72,10 +77,6 @@ func runCmd(f config.File) State {
 func Check() {
 	for _, f := range config.C.Files {
 		cmd := f.Cmd
-		if config.Verbose {
-			fmt.Println("Check " + cmd)
-		}
-
 		prefix := fmt.Sprintf("worker(%s)", cmd)
 		States[cmd] = runCmd(f)
 		if config.Verbose {
