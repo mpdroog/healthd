@@ -70,6 +70,7 @@ func main() {
 
 	http.HandleFunc("/", doc)
 	http.HandleFunc("/zenoss", zenoss)
+	http.HandleFunc("/_mon", zenoss)
 	http.HandleFunc("/health", health)
 
 	if e := worker.Init(); e != nil {
