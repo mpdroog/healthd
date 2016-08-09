@@ -1,17 +1,15 @@
 HealthD
 =================
-Run all commands from the `conf.d`-dir and make the results
+Run all commands from the `scripts.d`-dir and make the results
 available through HTTP.
 
-Example conf.d
-```
-cmd = "/usr/bin/php"
-args = "test.php"
-# prefix added to string on error
-errprefix = "example"
-```
-
 How does it work?
-* (On boot) read all `conf.d/*.toml` entries
-* Run conf.d commands every 5minutes
-* Make results available through *:10515/zenoss (plain/text) and *:10515/health (JSON)
+* (On boot) read all `scripts.d/*.*` entries
+* Run these scripts every 5minutes
+* Make results available through HTTP (port 10515)
+
+URLS:
+*:10515/_mon (plain/text)
+*:10515/zenoss (plain/text)
+*:10515/health (JSON)
+
