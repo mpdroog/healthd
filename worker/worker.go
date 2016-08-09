@@ -64,13 +64,13 @@ func runCmd(f config.File) State {
 		return State{Err: e}
 	}
 
-	cmdErr := cmd.Wait()
+	// Ignore Wait-output
+	cmd.Wait()
 	ok := bytes.HasPrefix(stdOut, []byte("OK"))
 	return State{
 		Ok: ok,
 		Stdout: string(stdOut),
 		Stderr: string(stdErr),
-		Err: cmdErr,
 	}
 }
 
