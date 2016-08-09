@@ -2,30 +2,24 @@ package config
 
 import (
 	"os"
-	"strings"
 	"path/filepath"
-	"github.com/BurntSushi/toml"
-	"fmt"
 )
 
 type File struct {
 	Cmd string
-	Args string
-	Errprefix string
 }
 type Config struct {
-	Files map[string]File
+	Files []File
 }
 
 var (
 	Verbose bool
-	Confdir string
+	Scriptdir string
 	C Config
 )
 
 func Init() error {
-	C.Files = make(map[string]File)
-	return loadConfDir(Confdir)
+	return loadConfDir(Scriptdir)
 }
 func Close() error {
 	return nil
@@ -39,20 +33,9 @@ func loadConfDir(base string) error {
 				return nil
 			}
 
-			if strings.HasSuffix(path, ".toml") {
-				r, e := os.Open(path)
-				if e != nil {
-					return e
-				}
-				var f File
-				if _, e := toml.DecodeReader(r, &f); e != nil {
-					r.Close()
-					return fmt.Errorf("TOML(%s): %s", path, e)
-				}
-				r.Close()
-				C.Files[path] = f
-			}
-
+			C.Files = append(C.Files, File{
+				Cmd: path,
+			})
 			return nil
 		})
 	}

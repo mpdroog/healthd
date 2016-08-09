@@ -11,7 +11,7 @@ import (
 )
 
 func doc(w http.ResponseWriter, r *http.Request) {
-	//
+	w.Write([]byte("Documentation on <a href='https://github.com/mpdroog/healthd'>https://github.com/mpdroog/healthd</a>"))
 }
 func health(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -32,9 +32,9 @@ func health(w http.ResponseWriter, r *http.Request) {
 }
 func zenoss(w http.ResponseWriter, r *http.Request) {
 	var err []string
-	for _, state := range worker.States {
+	for name, state := range worker.States {
 		if !state.Ok {
-			err = append(err, state.String())
+			err = append(err, fmt.Sprintf("[%s] %s\n", name, state.String()))
 		}
 	}
 
@@ -43,7 +43,7 @@ func zenoss(w http.ResponseWriter, r *http.Request) {
 		s = fmt.Sprintf("OK: %d Active nodes.\n", len(worker.States))
 	} else {
 		w.WriteHeader(500)
-		s = fmt.Sprintf(strings.Join(err, ", "))
+		s = fmt.Sprintf("ERR: " + strings.Join(err, ", "))
 	}
 
 	w.Header().Set("Content-Type", "text/html")
@@ -55,7 +55,7 @@ func zenoss(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	flag.StringVar(&config.Confdir, "d", "/etc/healthd/conf.d", "Path to config-files per service")
+	flag.StringVar(&config.Scriptdir, "d", "/etc/healthd/script.d", "Path to scripts to run")
 	flag.BoolVar(&config.Verbose, "v", false, "Verbose-mode (log more)")
 	flag.Parse()
 

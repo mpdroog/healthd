@@ -7,11 +7,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"bytes"
+	"strings"
 )
 
 type State struct {
-	prefix string
-
 	Ok bool
 	Stdout string
 	Stderr string
@@ -23,10 +22,7 @@ func (s State) String() string {
 	if len(s.Stdout) > 0 {
 		msg += s.Stdout
 	}
-	if s.Err != nil {
-		msg += s.Err.Error()
-	}
-	return fmt.Sprintf("%s: %s", s.prefix, msg)
+	return strings.Replace(msg, "\n", "", -1)
 }
 
 var States map[string]State
@@ -37,8 +33,8 @@ func Init() error {
 	return nil
 }
 
-func runCmd(prefix string, f config.File) State {
-	cmd := exec.Command(f.Cmd, f.Args)
+func runCmd(f config.File) State {
+	cmd := exec.Command(f.Cmd, "")
 
 	re, e := cmd.StderrPipe()
 	if e != nil {
@@ -50,9 +46,6 @@ func runCmd(prefix string, f config.File) State {
 		return State{Err: e}
 	}
 
-	if config.Verbose {
-		fmt.Printf("%s Run %s %s\n", prefix, f.Cmd, f.Args)
-	}
 	if e := cmd.Start(); e != nil {
 		return State{Err: e}
 	}
@@ -77,17 +70,16 @@ func runCmd(prefix string, f config.File) State {
 }
 
 func Check() {
-	for name, f := range config.C.Files {
+	for _, f := range config.C.Files {
+		cmd := f.Cmd
 		if config.Verbose {
-			fmt.Println("Check " + name)
+			fmt.Println("Check " + cmd)
 		}
 
-		prefix := fmt.Sprintf("worker(%s)", name)
-		state := runCmd(prefix, f)
-		state.prefix = name
-		States[name] = state
+		prefix := fmt.Sprintf("worker(%s)", cmd)
+		States[cmd] = runCmd(f)
 		if config.Verbose {
-			fmt.Printf("worker(%s) %+v\n", name, States[name])
+			fmt.Printf("%s %+v\n", prefix, States[cmd])
 		}
 	}
 }
