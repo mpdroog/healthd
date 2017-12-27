@@ -9,7 +9,8 @@ How does it work?
 * Make results available through HTTP (port 10515)
 
 URLS:
-*:10515/_mon (plain/text)
-*:10515/zenoss (plain/text)
-*:10515/health (JSON)
+* :10515/_mon (plain/text)
+* :10515/zenoss (plain/text)
+* :10515/health (JSON)
 
+```curl http://0:10515/_mon```
