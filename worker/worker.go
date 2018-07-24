@@ -1,20 +1,20 @@
 package worker
 
 import (
-	"github.com/mpdroog/healthd/config"
-	"time"
-	"os/exec"
-	"fmt"
-	"io/ioutil"
 	"bytes"
+	"fmt"
+	"github.com/mpdroog/healthd/config"
+	"io/ioutil"
+	"os/exec"
 	"strings"
+	"time"
 )
 
 type State struct {
-	Ok bool
+	Ok     bool
 	Stdout string
 	Stderr string
-	Err error
+	Err    error
 }
 
 func (s State) String() string {
@@ -68,7 +68,7 @@ func runCmd(f config.File) State {
 	cmd.Wait()
 	ok := bytes.HasPrefix(stdOut, []byte("OK"))
 	return State{
-		Ok: ok,
+		Ok:     ok,
 		Stdout: string(stdOut),
 		Stderr: string(stdErr),
 	}

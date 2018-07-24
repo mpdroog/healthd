@@ -13,9 +13,9 @@ type Config struct {
 }
 
 var (
-	Verbose bool
+	Verbose   bool
 	Scriptdir string
-	C Config
+	C         Config
 )
 
 func Init() error {

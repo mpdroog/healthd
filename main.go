@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/coreos/go-systemd/daemon"
 	"github.com/mpdroog/healthd/config"
 	"github.com/mpdroog/healthd/worker"
 	"net/http"
 	"strings"
-	"github.com/coreos/go-systemd/daemon"
 )
 
 func doc(w http.ResponseWriter, r *http.Request) {
