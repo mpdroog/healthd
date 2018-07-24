@@ -1,13 +1,14 @@
 package main
 
 import (
-	"net/http"
-	"fmt"
+	"encoding/json"
 	"flag"
+	"fmt"
 	"github.com/mpdroog/healthd/config"
 	"github.com/mpdroog/healthd/worker"
-	"encoding/json"
+	"net/http"
 	"strings"
+	"github.com/coreos/go-systemd/daemon"
 )
 
 func doc(w http.ResponseWriter, r *http.Request) {
@@ -75,6 +76,14 @@ func main() {
 
 	if e := worker.Init(); e != nil {
 		panic(e)
+	}
+
+	sent, e := daemon.SdNotify(false, "READY=1")
+	if e != nil {
+		panic(e)
+	}
+	if !sent {
+		fmt.Printf("SystemD notify NOT sent\n")
 	}
 
 	if config.Verbose {
