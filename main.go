@@ -56,6 +56,8 @@ func zenoss(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	var listen string
+	flag.StringVar(&listen, "l", ":10515", "Listen addr")
 	flag.StringVar(&config.Scriptdir, "d", "/etc/healthd/script.d", "Path to scripts to run")
 	flag.BoolVar(&config.Verbose, "v", false, "Verbose-mode (log more)")
 	flag.Parse()
@@ -87,9 +89,9 @@ func main() {
 	}
 
 	if config.Verbose {
-		fmt.Println("HTTP listening on :10515")
+		fmt.Println("HTTP listening on " + listen)
 	}
-	if e := http.ListenAndServe(":10515", nil); e != nil {
+	if e := http.ListenAndServe(listen, nil); e != nil {
 		panic(e)
 	}
 }
