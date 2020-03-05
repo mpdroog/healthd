@@ -100,7 +100,7 @@ func loop() {
 				fmt.Println("5min passed")
 			}
 			if e := config.ReloadConf(); e != nil {
-				fmt.Printf("WARN: config.ReloadConf e=%s\n", e.Error());
+				fmt.Printf("WARN: config.ReloadConf e=%s\n", e.Error())
 			}
 			Check()
 		}
