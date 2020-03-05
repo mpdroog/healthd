@@ -25,6 +25,11 @@ func Close() error {
 	return nil
 }
 
+func ReloadConf() error {
+	C.Files = []File{}
+	return loadConfDir(Scriptdir)
+}
+
 func loadConfDir(base string) error {
 	if len(base) > 0 {
 		return filepath.Walk(base, func(path string, f os.FileInfo, err error) error {
