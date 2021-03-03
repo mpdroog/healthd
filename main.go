@@ -11,12 +11,14 @@ import (
 	"strings"
 )
 
+const HEALTHD_VERSION = "0.02"
+
 func doc(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Documentation on <a href='https://github.com/mpdroog/healthd'>https://github.com/mpdroog/healthd</a>"))
+	w.Write([]byte("Documentation on https://github.com/mpdroog/healthd"))
 }
 func health(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("X-HEALTH", "0.01")
+	w.Header().Set("X-HEALTH", HEALTHD_VERSION)
 
 	b, e := json.Marshal(worker.States)
 	if e != nil {
@@ -33,7 +35,7 @@ func health(w http.ResponseWriter, r *http.Request) {
 }
 func zenoss(w http.ResponseWriter, r *http.Request) {
 	var err []string
-	for name, state := range worker.States {
+	for name, state := range worker.States["default"] {
 		if !state.Ok {
 			err = append(err, fmt.Sprintf("[%s] %s\n", name, state.String()))
 		}
@@ -48,7 +50,7 @@ func zenoss(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/html")
-	w.Header().Set("X-HEALTH", "0.01")
+	w.Header().Set("X-HEALTH", HEALTHD_VERSION)
 	if _, e := w.Write([]byte(s)); e != nil {
 		fmt.Println("zenoss: " + e.Error())
 		return

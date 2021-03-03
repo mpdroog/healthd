@@ -30,16 +30,24 @@ func (s State) String() string {
 	return strings.Replace(msg, "\n", "", -1)
 }
 
-var States map[string]State
+var States map[string]map[string]State
 
 func Init() error {
-	States = make(map[string]State)
+	States = make(map[string]map[string]State)
+	for dept, _ := range config.Departments {
+		d := make(map[string]State)
+		States[dept] = d
+	}
+	if config.Verbose {
+		fmt.Printf("worker.States=%+v\n", States)
+	}
+
 	go loop()
 	return nil
 }
 
-func runCmd(f config.File) State {
-	cmd := exec.Command(f.Cmd, "")
+func runCmd(fname string) State {
+	cmd := exec.Command(fname, "")
 
 	re, e := cmd.StderrPipe()
 	if e != nil {
@@ -75,12 +83,11 @@ func runCmd(f config.File) State {
 }
 
 func Check() {
-	for _, f := range config.C.Files {
-		cmd := f.Cmd
-		prefix := fmt.Sprintf("worker(%s)", cmd)
-		States[cmd] = runCmd(f)
+	for fname, meta := range config.C.Files {
+		prefix := fmt.Sprintf("worker(%s)", fname)
+		States[meta.Department][fname] = runCmd(fname)
 		if config.Verbose {
-			fmt.Printf("%s %+v\n", prefix, States[cmd])
+			fmt.Printf("%s %+v\n", prefix, States[fname])
 		}
 	}
 }
