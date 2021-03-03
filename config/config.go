@@ -34,7 +34,7 @@ func Close() error {
 }
 
 func ReloadConf() error {
-	C.Files = []File{}
+	C.Files = make(map[string]File)
 	return loadConfDir(Scriptdir)
 }
 
