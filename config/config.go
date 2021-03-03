@@ -33,6 +33,11 @@ func Close() error {
 	return nil
 }
 
+func ReloadConf() error {
+	C.Files = []File{}
+	return loadConfDir(Scriptdir)
+}
+
 func loadConfDir(base string) error {
 	if len(base) == 0 {
 		return fmt.Errorf("no path given")
