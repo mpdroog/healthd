@@ -11,6 +11,6 @@ How does it work?
 URLS:
 * :10515/_mon (plain/text)
 * :10515/zenoss (plain/text)
-* :10515/health (JSON)
+* :10515/health (JSON, grouped by departments)
 
 ```curl http://0:10515/_mon```
