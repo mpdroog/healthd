@@ -21,7 +21,7 @@ func (s State) String() string {
 	} else {
 		msg = s.Stderr
 		if len(s.Stdout) > 0 {
-			msg += s.Stdout
+			msg += ", " + s.Stdout
 		}
 	}
 	return strings.Replace(msg, "\n", "", -1)

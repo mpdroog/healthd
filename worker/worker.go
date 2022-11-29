@@ -75,6 +75,9 @@ func Check() {
 		}
 	}
 
+	if config.Verbose {
+		fmt.Printf("Result=%+v\n", s)
+	}
 	statesLock.Lock()
 	states = s
 	statesLock.Unlock()
@@ -82,6 +85,9 @@ func Check() {
 
 // Run every 5mins and remember state
 func loop() {
+	if config.Verbose {
+		fmt.Println("worker.Check(initial)")
+	}
 	Check()
 
 	for {
@@ -92,10 +98,14 @@ func loop() {
 		select {
 		case <-time.After(5 * time.Minute):
 			if config.Verbose {
-				fmt.Println("5min passed")
+				fmt.Println("worker.Reload")
 			}
 			if e := config.ReloadConf(); e != nil {
 				fmt.Printf("WARN: config.ReloadConf e=%s\n", e.Error())
+			}
+
+			if config.Verbose {
+				fmt.Println("worker.Check(after 5min sleep)")
 			}
 			Check()
 		}
