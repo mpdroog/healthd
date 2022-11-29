@@ -21,7 +21,7 @@ func TestRunInvalid(t *testing.T) {
 	defer cancel()
 
 	s := runCmd(ctx, "../script.unittest/invalidtest.sh")
-	if s.String() != "Stdout missing OK" {
+	if s.String() != "Stdout not OK" {
 		t.Errorf("invalidtest-script should error, output=%s", s.String())
 	}
 }
