@@ -1,8 +1,8 @@
 package worker
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 func TestState(t *testing.T) {

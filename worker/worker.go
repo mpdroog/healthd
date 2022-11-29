@@ -65,13 +65,17 @@ func Check() {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 
+	if len(config.C.Files) == 0 {
+		s["default"]["healthd"] = State{Err: fmt.Errorf("Misconfig: No scripts to run")}
+	}
+
 	for fname, meta := range config.C.Files {
 		prefix := fmt.Sprintf("worker(%s)", fname)
 		res := runCmd(ctx, fname)
 		s[meta.Department][fname] = res
 
 		if config.Verbose {
-			fmt.Printf("%s %+v\n", prefix, res)
+			fmt.Printf("%s: %+v\n", prefix, res)
 		}
 	}
 
