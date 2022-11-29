@@ -27,43 +27,43 @@ func runCmd(ctxGroup context.Context, fname string) (s *State) {
 
 	re, e := cmd.StderrPipe()
 	if e != nil {
-		s.Err = e
+		s.Err = e.Error()
 		return
 	}
 
 	ro, e := cmd.StdoutPipe()
 	if e != nil {
-		s.Err = e
+		s.Err = e.Error()
 		return
 	}
 
 	if e := cmd.Start(); e != nil {
-		s.Err = e
+		s.Err = e.Error()
 		return
 	}
 
 	stdErr, e := ioutil.ReadAll(re)
 	if e != nil {
-		s.Err = e
+		s.Err = e.Error()
 		return
 	}
 	stdOut, e := ioutil.ReadAll(ro)
 	if e != nil {
-		s.Err = e
+		s.Err = e.Error()
 		return
 	}
 
 	if e := cmd.Wait(); e != nil {
-		s.Err = e
+		s.Err = e.Error()
 		return
 	}
 
-	s.Stdout = string(stdOut)
-	s.Stderr = string(stdErr)
+	s.Stdout = string(bytes.TrimSpace(stdOut))
+	s.Stderr = string(bytes.TrimSpace(stdErr))
 	s.Ok = bytes.HasPrefix(stdOut, []byte("OK"))
 
 	if !s.Ok {
-		s.Err = fmt.Errorf("Stdout not OK")
+		s.Err = "Stdout not OK"
 	}
 	return s
 }
@@ -76,14 +76,14 @@ func Check() {
 	defer cancel()
 
 	if len(config.C.Files) == 0 {
-		s["default"]["healthd"] = &State{Err: fmt.Errorf("Misconfig: No scripts to run")}
+		s["default"]["healthd"] = &State{Err: "Misconfig: No scripts to run"}
 	}
 
 	for fname, meta := range config.C.Files {
 		prefix := fmt.Sprintf("worker(%s)", fname)
 		res := runCmd(ctx, fname)
 		if _, already := s[meta.Department][fname]; already {
-			s["default"]["healthd"] = &State{Err: fmt.Errorf("Misconfig: Double-run " + fname)}
+			s["default"]["healthd"] = &State{Err: "Misconfig: Double-run " + fname}
 		}
 		s[meta.Department][fname] = res
 

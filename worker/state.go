@@ -11,13 +11,13 @@ type State struct {
 	Ok     bool
 	Stdout string
 	Stderr string
-	Err    error
+	Err    string
 }
 
-func (s State) String() string {
+func (s *State) String() string {
 	var msg string
-	if s.Err != nil {
-		msg += s.Err.Error()
+	if s.Err != "" {
+		msg += s.Err
 	}
 	if len(s.Stderr) > 0 {
 		msg += ": " + s.Stderr
@@ -42,7 +42,7 @@ func initState() error {
 	if config.Verbose {
 		fmt.Printf("worker.States=%+v\n", states)
 	}
-	states["default"]["healthd"] = &State{Err: fmt.Errorf("Healthd still starting")}
+	states["default"]["healthd"] = &State{Err: "Healthd still starting"}
 	return nil
 }
 
@@ -55,16 +55,29 @@ func nextState() map[string]map[string]*State {
 	return s
 }
 
+// Deep-copy a department
 func GetState(dept string) map[string]*State {
 	statesLock.RLock()
 	defer statesLock.RUnlock()
 
-	return states[dept]
+	n := nextState()
+	for k, v := range states[dept] {
+		n[dept][k] = v
+	}
+
+	return n[dept]
 }
+
+// Deep-copy everything
 func GetAllStates() map[string]map[string]*State {
 	statesLock.RLock()
 	defer statesLock.RUnlock()
 
-	s := states
-	return s
+	n := nextState()
+	for dept, vals := range states {
+		for k, v := range vals {
+			n[dept][k] = v
+		}
+	}
+	return n
 }
