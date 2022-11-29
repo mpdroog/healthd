@@ -10,6 +10,7 @@ import (
 	"time"
 )
 
+// Init prepares memory and spawns the go-routine
 func Init() error {
 	if e := initState(); e != nil {
 		return e
@@ -18,6 +19,7 @@ func Init() error {
 	return nil
 }
 
+// runCmd runs a command with 10sec deadline
 func runCmd(ctxGroup context.Context, fname string) State {
 	ctx, cancel := context.WithTimeout(ctxGroup, 10*time.Second)
 	defer cancel()
@@ -56,10 +58,11 @@ func runCmd(ctxGroup context.Context, fname string) State {
 	}
 }
 
+// Check runs all script.d-files with 3min deadline
 func Check() {
 	s := nextState()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 
 	for fname, meta := range config.C.Files {

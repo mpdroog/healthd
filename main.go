@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-const HEALTHD_VERSION = "0.02"
+const HEALTHD_VERSION = "0.03"
 
 func doc(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Documentation on https://github.com/mpdroog/healthd"))
