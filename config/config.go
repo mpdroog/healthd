@@ -68,12 +68,10 @@ func loadConfDir(ctx context.Context, base string) error {
 			if e != nil {
 				return e
 			}
-			if e := r.SetDeadline(deadline); e != nil {
-				return e
-			}
+			rc := NewTimeoutReader(ctx, r)
 			// DevNote: be careful to close r!
 			obj := Meta{}
-			if e := json.NewDecoder(r).Decode(&obj); e != nil {
+			if e := json.NewDecoder(rc).Decode(&obj); e != nil {
 				r.Close() // ignore
 				return e
 			}
