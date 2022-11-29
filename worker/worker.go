@@ -49,7 +49,9 @@ func runCmd(ctxGroup context.Context, fname string) State {
 	}
 
 	// Ignore Wait-output
-	cmd.Wait()
+	if e := cmd.Wait(); e != nil {
+		return State{Err: e}
+	}
 	ok := bytes.HasPrefix(stdOut, []byte("OK"))
 	return State{
 		Ok:     ok,
