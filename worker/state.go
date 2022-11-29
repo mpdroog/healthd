@@ -17,12 +17,16 @@ type State struct {
 func (s State) String() string {
 	var msg string
 	if s.Err != nil {
-		msg = s.Err.Error()
-	} else {
-		msg = s.Stderr
-		if len(s.Stdout) > 0 {
-			msg += ", " + s.Stdout
-		}
+		msg += s.Err.Error()
+	}
+	if len(s.Stderr) > 0 {
+		msg += ": " + s.Stderr
+	}
+	if len(s.Stdout) > 0 {
+		msg += ": " + s.Stdout
+	}
+	if msg[0:1] == ":" {
+		msg = msg[2:] // strip prefix
 	}
 	return strings.Replace(msg, "\n", "", -1)
 }
