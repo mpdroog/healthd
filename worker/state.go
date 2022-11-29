@@ -32,7 +32,7 @@ func (s State) String() string {
 }
 
 var (
-	states     map[string]map[string]State
+	states     map[string]map[string]*State
 	statesLock *sync.RWMutex
 )
 
@@ -42,25 +42,26 @@ func initState() error {
 	if config.Verbose {
 		fmt.Printf("worker.States=%+v\n", states)
 	}
+	states["default"]["healthd"] = &State{Err: fmt.Errorf("Healthd still starting")}
 	return nil
 }
 
-func nextState() map[string]map[string]State {
-	s := make(map[string]map[string]State)
+func nextState() map[string]map[string]*State {
+	s := make(map[string]map[string]*State)
 	for dept, _ := range config.Departments {
-		d := make(map[string]State)
+		d := make(map[string]*State)
 		s[dept] = d
 	}
 	return s
 }
 
-func GetState(dept string) map[string]State {
+func GetState(dept string) map[string]*State {
 	statesLock.RLock()
 	defer statesLock.RUnlock()
 
 	return states[dept]
 }
-func GetAllStates() map[string]map[string]State {
+func GetAllStates() map[string]map[string]*State {
 	statesLock.RLock()
 	defer statesLock.RUnlock()
 

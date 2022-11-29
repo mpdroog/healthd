@@ -18,46 +18,52 @@ func Init() error {
 	return nil
 }
 
-// runCmd runs a command with 10sec deadline
-func runCmd(ctxGroup context.Context, fname string) State {
-	ctx, cancel := context.WithTimeout(ctxGroup, 10*time.Second)
+// runCmd runs a command with 30sec deadline
+func runCmd(ctxGroup context.Context, fname string) (s *State) {
+	s = new(State)
+	ctx, cancel := context.WithTimeout(ctxGroup, 30*time.Second)
 	defer cancel()
 	cmd := NewCommand(ctx, fname)
 
 	re, e := cmd.StderrPipe()
 	if e != nil {
-		return State{Err: e}
+		s.Err = e
+		return
 	}
 
 	ro, e := cmd.StdoutPipe()
 	if e != nil {
-		return State{Err: e}
+		s.Err = e
+		return
 	}
 
 	if e := cmd.Start(); e != nil {
-		return State{Err: e}
+		s.Err = e
+		return
 	}
 
 	stdErr, e := ioutil.ReadAll(re)
 	if e != nil {
-		return State{Err: e}
+		s.Err = e
+		return
 	}
 	stdOut, e := ioutil.ReadAll(ro)
 	if e != nil {
-		return State{Err: e}
+		s.Err = e
+		return
 	}
 
 	if e := cmd.Wait(); e != nil {
-		return State{Err: e}
+		s.Err = e
+		return
 	}
 
-	s := State{
-		Stdout: string(stdOut),
-		Stderr: string(stdErr),
-	}
+	s.Stdout = string(stdOut)
+	s.Stderr = string(stdErr)
 	s.Ok = bytes.HasPrefix(stdOut, []byte("OK"))
+
 	if !s.Ok {
-		s.Err = fmt.Errorf("Stdout missing OK")
+		s.Err = fmt.Errorf("Stdout not OK")
 	}
 	return s
 }
@@ -70,12 +76,15 @@ func Check() {
 	defer cancel()
 
 	if len(config.C.Files) == 0 {
-		s["default"]["healthd"] = State{Err: fmt.Errorf("Misconfig: No scripts to run")}
+		s["default"]["healthd"] = &State{Err: fmt.Errorf("Misconfig: No scripts to run")}
 	}
 
 	for fname, meta := range config.C.Files {
 		prefix := fmt.Sprintf("worker(%s)", fname)
 		res := runCmd(ctx, fname)
+		if _, already := s[meta.Department][fname]; already {
+			s["default"]["healthd"] = &State{Err: fmt.Errorf("Misconfig: Double-run " + fname)}
+		}
 		s[meta.Department][fname] = res
 
 		if config.Verbose {
