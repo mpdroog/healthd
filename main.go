@@ -20,7 +20,7 @@ func health(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("X-HEALTH", HEALTHD_VERSION)
 
-	b, e := json.Marshal(worker.States)
+	b, e := json.Marshal(worker.GetAllStates())
 	if e != nil {
 		fmt.Println("config: " + e.Error())
 		w.WriteHeader(500)
@@ -35,7 +35,8 @@ func health(w http.ResponseWriter, r *http.Request) {
 }
 func zenoss(w http.ResponseWriter, r *http.Request) {
 	var err []string
-	for name, state := range worker.States["default"] {
+	res := worker.GetState("default")
+	for name, state := range res {
 		if !state.Ok {
 			err = append(err, fmt.Sprintf("[%s] %s\n", name, state.String()))
 		}
@@ -43,7 +44,7 @@ func zenoss(w http.ResponseWriter, r *http.Request) {
 
 	var s string
 	if len(err) == 0 {
-		s = fmt.Sprintf("OK: %d Active nodes.\n", len(worker.States))
+		s = fmt.Sprintf("OK: %d Active nodes.\n", len(res))
 	} else {
 		w.WriteHeader(500)
 		s = fmt.Sprintf("ERR: " + strings.Join(err, ", "))

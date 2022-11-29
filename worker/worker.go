@@ -2,11 +2,13 @@ package worker
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"github.com/mpdroog/healthd/config"
 	"io/ioutil"
 	"os/exec"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -30,24 +32,44 @@ func (s State) String() string {
 	return strings.Replace(msg, "\n", "", -1)
 }
 
-var States map[string]map[string]State
+var (
+	states     map[string]map[string]State
+	statesLock *sync.RWMutex
+)
 
 func Init() error {
-	States = make(map[string]map[string]State)
+	statesLock = new(sync.RWMutex)
+	states = make(map[string]map[string]State)
 	for dept, _ := range config.Departments {
 		d := make(map[string]State)
-		States[dept] = d
+		states[dept] = d
 	}
 	if config.Verbose {
-		fmt.Printf("worker.States=%+v\n", States)
+		fmt.Printf("worker.States=%+v\n", states)
 	}
 
 	go loop()
 	return nil
 }
 
-func runCmd(fname string) State {
-	cmd := exec.Command(fname, "")
+func GetState(dept string) map[string]State {
+	statesLock.RLock()
+	defer statesLock.RUnlock()
+
+	return states[dept]
+}
+func GetAllStates() map[string]map[string]State {
+	statesLock.RLock()
+	defer statesLock.RUnlock()
+
+	s := states
+	return s
+}
+
+func runCmd(ctxGroup context.Context, fname string) State {
+	ctx, cancel := context.WithTimeout(ctxGroup, 10*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, fname, "")
 
 	re, e := cmd.StderrPipe()
 	if e != nil {
@@ -83,19 +105,27 @@ func runCmd(fname string) State {
 }
 
 func Check() {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cancel()
+
 	for fname, meta := range config.C.Files {
 		prefix := fmt.Sprintf("worker(%s)", fname)
-		States[meta.Department][fname] = runCmd(fname)
+		res := runCmd(ctx, fname)
+
+		statesLock.Lock()
+		states[meta.Department][fname] = res
+		statesLock.Unlock()
+
 		if config.Verbose {
-			fmt.Printf("%s %+v\n", prefix, States[fname])
+			fmt.Printf("%s %+v\n", prefix, res)
 		}
 	}
 }
 
 // Run every 5mins and remember state
-// for Zenoss
 func loop() {
 	Check()
+
 	for {
 		if config.Verbose {
 			fmt.Println("worker sleep 5min")
