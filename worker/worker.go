@@ -39,17 +39,22 @@ var (
 
 func Init() error {
 	statesLock = new(sync.RWMutex)
-	states = make(map[string]map[string]State)
-	for dept, _ := range config.Departments {
-		d := make(map[string]State)
-		states[dept] = d
-	}
+	states = nextState()
 	if config.Verbose {
 		fmt.Printf("worker.States=%+v\n", states)
 	}
 
 	go loop()
 	return nil
+}
+
+func nextState() map[string]map[string]State {
+	s := make(map[string]map[string]State)
+	for dept, _ := range config.Departments {
+		d := make(map[string]State)
+		s[dept] = d
+	}
+	return s
 }
 
 func GetState(dept string) map[string]State {
@@ -105,21 +110,24 @@ func runCmd(ctxGroup context.Context, fname string) State {
 }
 
 func Check() {
+	s := nextState()
+
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 	defer cancel()
 
 	for fname, meta := range config.C.Files {
 		prefix := fmt.Sprintf("worker(%s)", fname)
 		res := runCmd(ctx, fname)
-
-		statesLock.Lock()
-		states[meta.Department][fname] = res
-		statesLock.Unlock()
+		s[meta.Department][fname] = res
 
 		if config.Verbose {
 			fmt.Printf("%s %+v\n", prefix, res)
 		}
 	}
+
+	statesLock.Lock()
+	states = s
+	statesLock.Unlock()
 }
 
 // Run every 5mins and remember state
