@@ -15,3 +15,13 @@ func TestRunTimeout(t *testing.T) {
 		t.Errorf("timeout-script other output than expected output=%s", s.String())
 	}
 }
+
+func TestRunInvalid(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	s := runCmd(ctx, "../script.unittest/invalidtest.sh")
+	if s.String() != "Stdout missing OK" {
+		t.Errorf("invalidtest-script should error, output=%s", s.String())
+	}
+}

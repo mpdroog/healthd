@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/mpdroog/healthd/config"
 	"io/ioutil"
-	"os/exec"
 	"time"
 )
 
@@ -23,7 +22,7 @@ func Init() error {
 func runCmd(ctxGroup context.Context, fname string) State {
 	ctx, cancel := context.WithTimeout(ctxGroup, 10*time.Second)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, fname, "")
+	cmd := NewCommand(ctx, fname)
 
 	re, e := cmd.StderrPipe()
 	if e != nil {
@@ -48,16 +47,19 @@ func runCmd(ctxGroup context.Context, fname string) State {
 		return State{Err: e}
 	}
 
-	// Ignore Wait-output
 	if e := cmd.Wait(); e != nil {
 		return State{Err: e}
 	}
-	ok := bytes.HasPrefix(stdOut, []byte("OK"))
-	return State{
-		Ok:     ok,
+
+	s := State{
 		Stdout: string(stdOut),
 		Stderr: string(stdErr),
 	}
+	s.Ok = bytes.HasPrefix(stdOut, []byte("OK"))
+	if !s.Ok {
+		s.Err = fmt.Errorf("Stdout missing OK")
+	}
+	return s
 }
 
 // Check runs all script.d-files with 3min deadline
