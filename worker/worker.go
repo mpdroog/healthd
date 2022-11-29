@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/mpdroog/healthd/config"
 	"io/ioutil"
+	"sync"
 	"time"
 )
 
@@ -18,10 +19,10 @@ func Init() error {
 	return nil
 }
 
-// runCmd runs a command with 30sec deadline
+// runCmd runs a command with 1min deadline
 func runCmd(ctxGroup context.Context, fname string) (s *State) {
 	s = new(State)
-	ctx, cancel := context.WithTimeout(ctxGroup, 30*time.Second)
+	ctx, cancel := context.WithTimeout(ctxGroup, 1*time.Minute)
 	defer cancel()
 	cmd := NewCommand(ctx, fname)
 
@@ -71,6 +72,7 @@ func runCmd(ctxGroup context.Context, fname string) (s *State) {
 // Check runs all script.d-files with 3min deadline
 func Check() {
 	s := nextState()
+	sLock := new(sync.Mutex)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
@@ -79,18 +81,27 @@ func Check() {
 		s["default"]["healthd"] = &State{Err: "Misconfig: No scripts to run"}
 	}
 
+	wg := new(sync.WaitGroup)
+	// TODO: Cleaner go-routines?
 	for fname, meta := range config.C.Files {
-		prefix := fmt.Sprintf("worker(%s)", fname)
-		res := runCmd(ctx, fname)
-		if _, already := s[meta.Department][fname]; already {
-			s["default"]["healthd"] = &State{Err: "Misconfig: Double-run " + fname}
-		}
-		s[meta.Department][fname] = res
+		wg.Add(1)
+		go func(fname string, meta config.File) {
+			prefix := fmt.Sprintf("worker(%s)", fname)
+			res := runCmd(ctx, fname)
 
-		if config.Verbose {
-			fmt.Printf("%s: %+v\n", prefix, res)
-		}
+			sLock.Lock()
+			if _, already := s[meta.Department][fname]; already {
+				s["default"]["healthd"] = &State{Err: "Misconfig: Double-run " + fname}
+			}
+			s[meta.Department][fname] = res
+			if config.Verbose {
+				fmt.Printf("%s: %+v\n", prefix, res)
+			}
+			sLock.Unlock()
+			wg.Done()
+		}(fname, meta)
 	}
+	wg.Wait()
 
 	if config.Verbose {
 		fmt.Printf("Result=%+v\n", s)
