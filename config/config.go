@@ -63,6 +63,10 @@ func loadConfDir(ctx context.Context, base string) error {
 			// ignore root
 			return nil
 		}
+		if strings.HasSuffix(path, ".swp") {
+			// ignore files created by humans for testing (VIM tempfile)
+			return nil
+		}
 		if strings.HasSuffix(path, ".json") {
 			r, e := os.OpenFile(path, os.O_RDONLY, 0)
 			if e != nil {
