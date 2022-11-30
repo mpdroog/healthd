@@ -46,24 +46,21 @@ func runCmd(ctxGroup context.Context, fname string) (s *State) {
 	stdErr, e := ioutil.ReadAll(re)
 	if e != nil {
 		s.Err = e.Error()
-		return
 	}
 	stdOut, e := ioutil.ReadAll(ro)
 	if e != nil {
 		s.Err = e.Error()
-		return
 	}
 
 	if e := cmd.Wait(); e != nil {
 		s.Err = e.Error()
-		return
 	}
 
 	s.Stdout = string(bytes.TrimSpace(stdOut))
 	s.Stderr = string(bytes.TrimSpace(stdErr))
 	s.Ok = bytes.HasPrefix(stdOut, []byte("OK"))
 
-	if !s.Ok {
+	if !s.Ok && s.Err == "" {
 		s.Err = "Stdout not OK"
 	}
 	return s

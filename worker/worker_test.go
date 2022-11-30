@@ -25,3 +25,13 @@ func TestRunInvalid(t *testing.T) {
 		t.Errorf("invalidtest-script should error, output=%s", s.String())
 	}
 }
+
+func TestRunExit(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	s := runCmd(ctx, "../script.unittest/exit.sh")
+	if s.String() != "exit status 1: Failure msg" {
+		t.Errorf("exit-script invalid output=%s", s.String())
+	}
+}
