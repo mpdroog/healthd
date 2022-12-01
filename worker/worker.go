@@ -121,9 +121,10 @@ func loop() {
 		}
 
 		select {
-			case <-config.RefreshChan:
-				fmt.Println("Refresh signal")
-			case <-time.After(5 * time.Minute):
+		case <-config.RefreshChan:
+			fmt.Println("Refresh signal")
+			refreshState()
+		case <-time.After(5 * time.Minute):
 		}
 		if config.Verbose {
 			fmt.Println("worker.Reload")

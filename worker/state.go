@@ -45,6 +45,16 @@ func initState() error {
 	states["default"]["healthd"] = &State{Err: "Healthd still starting"}
 	return nil
 }
+func refreshState() {
+	statesLock.Lock()
+	defer statesLock.Unlock()
+
+	states = nextState()
+	if config.Verbose {
+		fmt.Printf("refreshState(worker.States=%+v)\n", states)
+	}
+	states["default"]["healthd"] = &State{Err: "Healthd refreshing.."}
+}
 
 func nextState() map[string]map[string]*State {
 	s := make(map[string]map[string]*State)

@@ -58,7 +58,7 @@ func zenoss(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func refresh(w http.ResponseWriter, r *http.Request) {
-	config.RefreshChan<-struct{}{}
+	config.RefreshChan <- struct{}{}
 
 	w.Header().Set("Content-Type", "application/json")
 	b := []byte(`{"msg": "OK"}`)
