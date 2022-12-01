@@ -57,6 +57,16 @@ func zenoss(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+func refresh(w http.ResponseWriter, r *http.Request) {
+	config.RefreshChan<-struct{}{}
+
+	w.Header().Set("Content-Type", "application/json")
+	b := []byte(`{"msg": "OK"}`)
+	if _, e := w.Write(b); e != nil {
+		fmt.Println("health: " + e.Error())
+		return
+	}
+}
 
 func main() {
 	var listen string
@@ -78,6 +88,7 @@ func main() {
 	http.HandleFunc("/zenoss", zenoss)
 	http.HandleFunc("/_mon", zenoss)
 	http.HandleFunc("/health", health)
+	http.HandleFunc("/refresh", refresh)
 
 	if e := worker.Init(); e != nil {
 		panic(e)

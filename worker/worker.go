@@ -121,18 +121,20 @@ func loop() {
 		}
 
 		select {
-		case <-time.After(5 * time.Minute):
-			if config.Verbose {
-				fmt.Println("worker.Reload")
-			}
-			if e := config.ReloadConf(); e != nil {
-				fmt.Printf("WARN: config.ReloadConf e=%s\n", e.Error())
-			}
-
-			if config.Verbose {
-				fmt.Println("worker.Check(after 5min sleep)")
-			}
-			Check()
+			case <-config.RefreshChan:
+				fmt.Println("Refresh signal")
+			case <-time.After(5 * time.Minute):
 		}
+		if config.Verbose {
+			fmt.Println("worker.Reload")
+		}
+		if e := config.ReloadConf(); e != nil {
+			fmt.Printf("WARN: config.ReloadConf e=%s\n", e.Error())
+		}
+
+		if config.Verbose {
+			fmt.Println("worker.Check(after 5min sleep)")
+		}
+		Check()
 	}
 }

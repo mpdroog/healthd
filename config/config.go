@@ -25,9 +25,11 @@ var (
 	Scriptdir   string
 	C           Config
 	Departments map[string]struct{}
+	RefreshChan chan struct{}
 )
 
 func Init() error {
+	RefreshChan = make(chan struct{})
 	return ReloadConf()
 }
 func Close() error {
